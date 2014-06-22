@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<title>Know your iris!</title>
+	<meta name="description" content="Know your iris!">
+	<meta name="author" content="Stephen Sullivan">
+	<meta name="generator" content="slidify" />
+	
+	<!-- LOAD STYLE SHEETS -->
+	<link rel="stylesheet" href="libraries/frameworks/html5slides/default/styles.css">
+	<link rel="stylesheet" href="libraries/highlighters/prettify/css/tomorrow.css" />  <link rel="stylesheet" href = "assets/css/ribbons.css">
+  
+</head>
+<body style='display: none'>
+	<section class='slides layout-regular template-regular'>
+     <article class="class" id="custbg" style="background:;">
+  <h3>Know your iris</h3>
+  <style>
+#custbg {
+  background-image:url('iris.jpg'); 
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+.tinytext {
+    font-size:0.5em;
+}
+</style>
+
+<p><i>A submission for the Coursera Developing Data Products assignment</i></p>
+
+<p>Ever had an iris and been unable to classify it neatly?</p>
+
+<p>Fear no more, the power of machine learning is here to help!</p>
+
+<p>To access the iris classifier, <a href='https://raoulsullivan.shinyapps.io/assignment/'>click here</a></p>
+
+<p>This presentation tells you more about how the iris classifier works.</p>
+
+</article>
+
+<article class="class" id="id" style="background:;">
+  <h3>The iris dataset</h3>
+  <blockquote>
+<p>&#39;The Iris flower data set or Fisher&#39;s Iris data set is a multivariate data set introduced by Sir Ronald Fisher (1936) as an example of discriminant analysis.&#39;</p>
+</blockquote>
+
+<p class='tinytext'>Wikipedia, <a href='http://en.wikipedia.org/wiki/Iris_flower_data_set'>http://en.wikipedia.org/wiki/Iris_flower_data_set</a>, accessed 22/6/2014</p>
+
+<p>It contains 150 observations of 5 variables: Sepal.Length, Sepal.Width, Petal.Length, Petal.Width, Species</p>
+
+<p><img src="figure/unnamed-chunk-2.png" title="plot of chunk unnamed-chunk-2" alt="plot of chunk unnamed-chunk-2" style="display: block; margin: auto;" /></p>
+
+</article>
+
+<article class="" id="slide-3" style="background:;">
+  <h3>PreProcessing</h3>
+  <p>Using the preProcess function from the Caret library, we can see that these 4 variables boil down to 2 principle components:</p>
+
+<pre><code class="r">preProc &lt;- preProcess(iris[, -5], method = &quot;pca&quot;, thresh = 0.9)
+preProc
+</code></pre>
+
+<pre><code>## 
+## Call:
+## preProcess.default(x = iris[, -5], method = &quot;pca&quot;, thresh = 0.9)
+## 
+## Created from 150 samples and 4 variables
+## Pre-processing: principal component signal extraction, scaled, centered 
+## 
+## PCA needed 2 components to capture 90 percent of the variance
+</code></pre>
+
+</article>
+
+<article class="" id="slide-4" style="background:;">
+  <h3>Model and prediction</h3>
+  <p>It&#39;s quick to train a random forest model on a dataset of this size.</p>
+
+<pre><code class="r">intraining &lt;- createDataPartition(iris$Species, p = 0.8, list = FALSE)
+train &lt;- iris[intraining, ]
+preProc2 &lt;- preProcess(train[, -5], method = &quot;pca&quot;, thresh = 0.9)
+trainingPCA &lt;- predict(preProc2, train[, -5])
+trainingPCA$Species &lt;- train$Species
+model &lt;- train(Species ~ ., data = trainingPCA, method = &quot;rf&quot;)
+test &lt;- iris[-intraining, ]
+testingPCA &lt;- predict(preProc2, test[, -5])
+predict &lt;- predict(model, testingPCA)
+out &lt;- table(predict == test$Species)
+</code></pre>
+
+<pre><code>## 
+## FALSE  TRUE 
+##     4    26
+</code></pre>
+
+</article>
+
+<article class="" id="slide-5" style="background:;">
+  <h3>Output</h3>
+  <p>So then we can run predictions against values submitted through the iris classification tool:</p>
+
+<pre><code class="r">input &lt;- data.frame(Sepal.Length = 5.2, Sepal.Width = 2.8, Petal.Length = 1.8, 
+    Petal.Width = 0.1)
+inputPCA &lt;- predict(preProc, input)
+predict &lt;- predict(model, inputPCA)
+predict
+</code></pre>
+
+<pre><code>## [1] setosa
+## Levels: setosa versicolor virginica
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-7.png" title="plot of chunk unnamed-chunk-7" alt="plot of chunk unnamed-chunk-7" style="display: block; margin: auto;" /></p>
+
+</article>
+
+  </section>
+</body>
+  <!-- LOAD JAVASCRIPTS  -->
+	<script src='libraries/frameworks/html5slides/default/slides.js'></script>
+	<!-- Google Prettify -->
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/prettify/188.0.0/prettify.js"></script>
+	<script src='libraries/highlighters/prettify/js/lang-r.js'></script>
+	<script>
+	  var pres = document.getElementsByTagName("pre");
+	  for (var i=0; i < pres.length; ++i) {
+	    pres[i].className = "prettyprint linenums";
+	  }
+	  prettyPrint();
+	</script>
+	<!-- End Google Prettify --> 
+	</html>
